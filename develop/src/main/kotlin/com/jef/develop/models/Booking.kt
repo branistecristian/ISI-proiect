@@ -9,13 +9,13 @@ import java.time.LocalDate
 
 @Document("bookings")
 data class Booking(
-    @Id
+        @Id
     val id: String? = null,
-    val userId: String,
-    val type: BookingType,
-    val itemId: String,          // islandId sau jetId
-    val startDate: LocalDate,
-    val endDate: LocalDate,
-    val status: BookingStatus = BookingStatus.PENDING,
-    val createdAt: Instant = Instant.now()
+        val userId: String,
+        val type: BookingType,
+        val itemId: String,          // islandId sau jetId
+        val startDate: LocalDate,
+        val endDate: LocalDate,
+        var status: BookingStatus = BookingStatus.PENDING,
+        val createdAt: Instant = Instant.now()
 )
