@@ -12,9 +12,9 @@ data class Quote(
     val id: String? = null,
     val name: String,
     val email: String,
-    val message: String,
+    val message: String?,
     val type: QuoteType,
-    val itemId: String? = null,
+    val itemId: String?,
     val createdAt: Instant = Instant.now(),
     val status: QuoteStatus = QuoteStatus.NEW
 )

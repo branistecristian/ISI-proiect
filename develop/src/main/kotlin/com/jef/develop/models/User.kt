@@ -13,5 +13,7 @@ data class User(
     val passwordHash: String,
     val name: String,
     val role: UserRole = UserRole.USER,
+    val favoritesIslandIds: List<String> = emptyList(),
+    val favoritesJetIds: List<String> = emptyList(),
     val createdAt: Instant = Instant.now()
 )

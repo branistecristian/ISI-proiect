@@ -11,6 +11,6 @@ data class Testimonial(
     val name: String,
     val title: String,
     val message: String,
-    val imageUrl: String? = null,
+    val rating: Int,
     val createdAt: Instant = Instant.now()
 )
