@@ -20,10 +20,12 @@ repositories {
 }
 
 dependencies {
-	// MongoDB (ai avut asta, o las)
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+
+	// MongoDB
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
-	// Web REST (nu exista webmvc starter, corect e asta)
+	// Web REST
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
 	// Security + OAuth2 client
