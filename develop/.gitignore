@@ -38,3 +38,13 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Node / Frontend ###
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+
+### Vite ###
+.vite/
