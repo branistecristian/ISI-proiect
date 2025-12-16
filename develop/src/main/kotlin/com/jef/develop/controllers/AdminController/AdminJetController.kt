@@ -18,6 +18,18 @@ class AdminJetController(
     @PostMapping
     fun createJet(@RequestBody jet: Jet): Jet = jetRepository.save(jet)
 
+    @PutMapping("/{id}")
+    fun updateJet(@PathVariable id: String, @RequestBody jetDetails: Jet): ResponseEntity<Jet> {
+        return jetRepository.findById(id).map { existingJet ->
+
+            val updatedJet = jetDetails.copy(
+                    id = existingJet.id
+            )
+
+            ResponseEntity.ok(jetRepository.save(updatedJet))
+        }.orElse(ResponseEntity.notFound().build())
+    }
+
     @DeleteMapping("/{id}")
     fun deleteJet(@PathVariable id: String): ResponseEntity<Void> {
         return if (jetRepository.existsById(id)) {
