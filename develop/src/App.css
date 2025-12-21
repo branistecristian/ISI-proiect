@@ -1,0 +1,175 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+
+.navbar button:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.hero-content {
+  text-align: center;
+  color: #fff;
+  margin-top: 10%;
+  text-shadow: 3px 3px 12px rgba(0,0,0,0.8); /* text mult mai vizibil */
+}
+
+.hero-content h1 {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.hero-content p {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+}
+
+.explore-btn {
+  padding: 15px 50px;
+  font-size: 1.3rem;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #ff512f, #dd2476);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.explore-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+/* Background premium cu gradient si lumina difuza */
+.luxury-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #ffffff10, #000000);
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  color: white;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Navigation bar elegant */
+.luxury-nav {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+/* Luxury button style */
+.luxury-button {
+  padding: 12px 28px;
+  border-radius: 40px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: linear-gradient(135deg, #ffffff10, #ffffff05);
+  color: white;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  backdrop-filter: blur(6px);
+}
+
+.luxury-button:hover {
+  background: linear-gradient(135deg, #ffffff30, #ffffff10);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255,255,255,0.15);
+}
+
+/* Active button (luxury gold glow) */
+.luxury-button.active {
+  border: 1px solid gold;
+  color: gold;
+  box-shadow: 0 0 15px gold;
+}
+
+/* Content area */
+.luxury-content {
+  text-align: center;
+  padding-top: 40px;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #ffd700, #ffffff, #ffd700);
+
+  /* Premium golden text */
+  background-clip: text;        /* Standard */
+  -webkit-background-clip: text; /* Safari + Chrome */
+  -webkit-text-fill-color: transparent;
+}
+.page-container {
+  padding: 30px;
+  text-align: center;
+}
+
+/* Subtitle text */
+.subtitle {
+  font-size: 1.4rem;
+  opacity: 0.8;
+  margin-bottom: 30px;
+}
+
+/* Hero box */
+.hero-box {
+  margin: 40px auto;
+  padding: 25px 35px;
+  max-width: 450px;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Islands grid */
+.island-grid {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+/* Island card */
+.island-card {
+  width: 230px;
+  padding: 20px;
+  border-radius: 25px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+/* Planes section */
+.plane-section {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.plane-box {
+  width: 300px;
+  padding: 25px;
+  border-radius: 25px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
+}
