@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*
 // DTO pentru datele de intrare
 data class LoginRequest(val email: String, val password: String)
 
-@RestController
+@RestController("adminAuthController")
 @RequestMapping("/api/admin/auth")
 @CrossOrigin(origins = ["http://localhost:5173"])
 class AuthController(
