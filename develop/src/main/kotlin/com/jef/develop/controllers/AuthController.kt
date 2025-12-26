@@ -7,7 +7,7 @@ import com.jef.develop.services.AuthService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
 
-@RestController
+@RestController("publicAuthController")
 @RequestMapping("/api/public/auth")
 class AuthController(
     private val authService: AuthService

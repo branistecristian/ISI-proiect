@@ -4,16 +4,23 @@ import com.jef.develop.models.requests.UpdateProfileRequest
 import com.jef.develop.models.responses.UserResponse
 import com.jef.develop.services.UserService
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/user")
 class UserController(
     private val userService: UserService
 ) {
-    // TODO: inlocuieste cu userId din JWT
-    private fun currentUserId(): String = "REPLACE_WITH_JWT_SUB"
-
+    private fun currentUserId(): String {
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth == null || auth.name == "anonymousUser") {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing token")
+        }
+        return auth.principal.toString()
+    }
     @GetMapping("/me")
     fun me(): UserResponse = userService.me(currentUserId())
 
