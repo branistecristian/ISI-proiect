@@ -10,5 +10,7 @@ data class IslandResponse(
     val description: String,
     val images: List<String>,
     val amenities: List<String>,
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val lat: Double?,
+    val lng: Double?
 )

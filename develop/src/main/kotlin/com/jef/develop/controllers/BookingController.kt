@@ -30,4 +30,8 @@ class BookingController(
     @GetMapping("/mine")
     fun mine(): List<BookingResponse> =
         bookingService.myBookings(currentUserId())
+
+    @PostMapping("/{id}/cancel")
+    fun cancel(@PathVariable id: String): BookingResponse =
+        bookingService.cancel(currentUserId(), id)
 }

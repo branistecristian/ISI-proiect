@@ -17,5 +17,6 @@ data class Booking(
         val startDate: LocalDate,
         val endDate: LocalDate,
         var status: BookingStatus = BookingStatus.PENDING,
-        val createdAt: Instant = Instant.now()
+        val createdAt: Instant = Instant.now(),
+        val updatedAt: Instant = Instant.now()
 )

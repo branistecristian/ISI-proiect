@@ -9,5 +9,5 @@ data class CreateBookingRequest(
     val jetId: String? = null,
     val startDate: LocalDate,
     val endDate: LocalDate,
-    val notes: String? = null
+    val notes: String? = null // not used for the moment
 )

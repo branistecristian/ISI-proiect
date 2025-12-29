@@ -14,5 +14,10 @@ data class Island(
     val description: String,
     val images: List<String> = emptyList(),
     val amenities: List<String> = emptyList(),
-    val isAvailable: Boolean = true
+    val isAvailable: Boolean = true,
+
+    // Arcgis
+    val lat: Double? = null,
+    val lng: Double? = null
+
 )
