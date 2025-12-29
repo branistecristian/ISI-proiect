@@ -12,7 +12,9 @@ fun Island.toResponse() = IslandResponse(
     description = description,
     images = images,
     amenities = amenities,
-    isAvailable = isAvailable
+    isAvailable = isAvailable,
+    lat = lat,
+    lng = lng
 )
 
 fun Jet.toResponse() = JetResponse(
@@ -46,6 +48,9 @@ fun Booking.toResponse() = BookingResponse(
     endDate = endDate,
     status = status,
     createdAt = this.createdAt
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate(),
+    updatedAt = this.updatedAt
         .atZone(ZoneId.systemDefault())
         .toLocalDate()
 )

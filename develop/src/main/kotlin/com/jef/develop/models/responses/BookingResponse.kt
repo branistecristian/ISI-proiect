@@ -12,5 +12,6 @@ data class BookingResponse(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val status: BookingStatus,
-    val createdAt: LocalDate
+    val createdAt: LocalDate,
+    val updatedAt: LocalDate
 )
