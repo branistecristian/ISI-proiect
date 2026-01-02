@@ -22,6 +22,9 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
+	// OpenAPI
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
 	// MongoDB
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
