@@ -20,10 +20,15 @@ repositories {
 }
 
 dependencies {
-	// MongoDB (ai avut asta, o las)
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+
+	// OpenAPI
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+	// MongoDB
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
-	// Web REST (nu exista webmvc starter, corect e asta)
+	// Web REST
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
 	// Security + OAuth2 client
@@ -43,6 +48,11 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 kotlin {
