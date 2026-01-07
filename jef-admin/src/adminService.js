@@ -72,9 +72,15 @@ export const fetchBookings = async () => {
     return response.data;
 };
 
-export const updateBookingStatus = async (bookingId, newStatus) => {
-    const response = await api.put(`/bookings/${bookingId}/status`, { status: newStatus });
+// Aceasta înlocuiește vechea funcție updateBookingStatus
+export const updateBooking = async (id, bookingData) => {
+    // bookingData trebuie să conțină { status, startDate, endDate }
+    const response = await api.put(`/bookings/${id}`, bookingData);
     return response.data;
+};
+
+export const deleteBooking = async (id) => {
+    await api.delete(`/bookings/${id}`);
 };
 
 // #########################################
@@ -88,4 +94,22 @@ export const loginUser = async (email, password) => {
     } catch (error) {
         throw error.response ? error.response.data : { message: "Eroare de server" };
     }
+};
+
+// #########################################
+// Functii pentru Utilizatori
+// #########################################
+
+export const fetchUsers = async () => {
+    const response = await api.get('/users');
+    return response.data;
+};
+
+export const updateUser = async (id, userData) => {
+    const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+};
+
+export const deleteUser = async (id) => {
+    await api.delete(`/users/${id}`);
 };
