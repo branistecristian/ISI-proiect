@@ -14,20 +14,33 @@ const LoginPage = ({ onLoginSuccess }) => {
         setLoading(true);
 
         try {
-            // Apelăm backend-ul
-            const user = await loginUser(email, password);
+            const responseData = await loginUser(email, password);
             
-            // Verificare suplimentară (deși backend-ul face deja asta)
-            if (user.role === 'ADMIN') {
-                // Salvăm userul în LocalStorage pentru a rămâne logat la refresh
-                localStorage.setItem('jef_admin_user', JSON.stringify(user));
-                // Anunțăm componenta părinte (App.js) că login-ul a reușit
-                onLoginSuccess(user);
-            } else {
-                setError("Deși ești logat, nu ai drepturi de ADMIN.");
+            // VERIFICARE DE SIGURANȚĂ
+            // Dacă responseData e gol sau nu are user, oprim execuția manual
+            if (!responseData || !responseData.user) {
+                throw new Error("Răspuns invalid de la server.");
             }
+
+            const { user, token } = responseData;
+
+            // Verificăm rolul
+            if (user.role === 'ADMIN') {
+                const dataToSave = { ...user, token: token };
+                localStorage.setItem('jef_admin_user', JSON.stringify(dataToSave));
+                onLoginSuccess(dataToSave);
+            } else {
+                setError("Contul tău nu are drepturi de Administrator.");
+            }
+
         } catch (err) {
-            setError(err.message || "Eroare la autentificare.");
+            console.error("Login Error:", err);
+            // Afișăm un mesaj clar în loc să crape aplicația
+            if (err.status === 403 || err.status === 401) {
+                setError("Email sau parolă incorectă.");
+            } else {
+                setError(err.message || "Eroare la conectarea cu serverul.");
+            }
         } finally {
             setLoading(false);
         }
