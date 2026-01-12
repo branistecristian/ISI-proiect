@@ -16,7 +16,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val jwtAuthFilter: JwtAuthFilter
+        private val jwtAuthFilter: JwtAuthFilter
 ) {
 
     @Bean
@@ -25,14 +25,11 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration().apply {
-
             allowedOrigins = listOf(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
+                    "http://localhost:5173", // Frontend-ul tău React
+                    "http://127.0.0.1:5173",
+                    "http://localhost:3000"
             )
-
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             exposedHeaders = listOf("Authorization")
@@ -44,27 +41,41 @@ class SecurityConfig(
         }
     }
 
+    // ... importuri ...
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .cors { it.configurationSource(corsConfigurationSource()) }
-            .csrf { it.disable() }
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-            .authorizeHttpRequests { auth ->
-                auth
-                    .requestMatchers("/api/public/**").permitAll()
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    .requestMatchers(
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html"
-                    ).permitAll()
-                    .anyRequest().authenticated()
-            }
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .formLogin { it.disable() }
-            .httpBasic { it.disable() }
+                .cors { it.configurationSource(corsConfigurationSource()) }
+                .csrf { it.disable() }
+                .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+                .authorizeHttpRequests { auth ->
+                    auth
+                            // 1. Login public
+                            .requestMatchers("/api/admin/auth/**").permitAll()
+
+                            // 2. Rute publice
+                            .requestMatchers("/api/public/**").permitAll()
+
+                            // 3. Swagger
+                            .requestMatchers(
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html"
+                            ).permitAll()
+
+                            // 4. RESTUL Admin Dashboard-ului este protejat
+                            // CORECTAT: Folosim "ROLE_ADMIN" pentru a se potrivi cu JwtAuthFilter
+                            .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+
+                            // 5. Orice altceva necesită autentificare
+                            .anyRequest().authenticated()
+                }
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
+                .formLogin { it.disable() }
+                .httpBasic { it.disable() }
 
         return http.build()
     }
+// ... restul clasei
 }
