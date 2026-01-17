@@ -1,9 +1,18 @@
-import AvioanePage from "./pages/Avioane/AvioanePage";
-import InsulePage from "./pages/Insule/InsulePage";
-import HomePage from "./pages/Home/HomePage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./App.css";
+
+import LoginPage from "./pages/Auth/LoginPage";
+import HomePage from "./pages/Home/HomePage";
+import InsulePage from "./pages/Insule/InsulePage";
+import IslandDetailsPage from "./pages/Insule/IslandDetailsPage";
+import AvioanePage from "./pages/Avioane/AvioanePage";
+import QuotePage from "./pages/Quote/QuotePage";
+import MapPage from "./pages/Map/MapPage";
+import BookingPage from "./pages/Booking/BookingPage";
+import DashboardPage from "./pages/Dashboard/DashboardPage";
+
+import type { IslandResponse } from "./api/generated/models/IslandResponse";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -12,7 +21,39 @@ const pageVariants = {
 };
 
 export default function App() {
-  const [page, setPage] = useState<"home" | "insule" | "avioane">("home");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const [page, setPage] = useState<
+    | "home"
+    | "insule"
+    | "island-details"
+    | "avioane"
+    | "map"
+    | "booking"
+    | "quote"
+    | "dashboard"
+  >("home");
+
+  const [selectedIsland, setSelectedIsland] =
+    useState<IslandResponse | null>(null);
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+const handleBookingSuccess = () => {
+  setPage("booking");
+};
+
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+  }
 
   return (
     <div className="luxury-container">
@@ -29,6 +70,30 @@ export default function App() {
         <LuxuryButton active={page === "avioane"} onClick={() => setPage("avioane")}>
           ✈️ Avioane
         </LuxuryButton>
+
+        <LuxuryButton active={page === "map"} onClick={() => setPage("map")}>
+          🗺️ Map
+        </LuxuryButton>
+
+        <LuxuryButton active={page === "booking"} onClick={() => setPage("booking")}>
+          📘 Booking
+        </LuxuryButton>
+
+        <LuxuryButton active={page === "quote"} onClick={() => setPage("quote")}>
+          💬 Quote
+        </LuxuryButton>
+
+        <LuxuryButton
+          active={page === "dashboard"}
+          onClick={() => setPage("dashboard")}
+        >
+          📊 Dashboard
+        </LuxuryButton>
+        
+
+        <button className="luxury-button" onClick={handleLogout}>
+          🚪 Logout
+        </button>
       </nav>
 
       {/* Page Content */}
@@ -42,14 +107,43 @@ export default function App() {
           transition={{ duration: 0.35, ease: "easeOut" }}
           className="luxury-content"
         >
-          {page === "home" && <HomePage />}
-          {page === "insule" && <InsulePage />}
+          {page === "home" && (
+            <HomePage
+              onExploreDashboard={() => setPage("dashboard")}
+              onStartExploring={() => setPage("insule")}
+            />
+          )}
+
+          {page === "insule" && (
+            <InsulePage
+              onSelectIsland={(island) => {
+                setSelectedIsland(island);
+                setPage("island-details");
+              }}
+            />
+          )}
+
+          {page === "island-details" && selectedIsland && (
+            <IslandDetailsPage
+  island={selectedIsland}
+  onBack={() => setPage("insule")}
+  onConfirmBooking={handleBookingSuccess}
+/>
+
+          )}
+
           {page === "avioane" && <AvioanePage />}
+          {page === "map" && <MapPage />}
+          {page === "booking" && <BookingPage />}
+          {page === "quote" && <QuotePage />}
+          {page === "dashboard" && <DashboardPage />}
         </motion.div>
       </AnimatePresence>
     </div>
   );
 }
+
+/* ================= BUTTON ================= */
 
 interface ButtonProps {
   active?: boolean;

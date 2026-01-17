@@ -1,0 +1,126 @@
+/* BACKGROUND */
+.lux-auth-bg {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #111 0%, #000 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CARD */
+.lux-auth-card {
+  width: 420px;
+  padding: 3rem;
+  background: #0a0a0a;
+  border-radius: 22px;
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.18);
+}
+
+/* TITLE */
+.lux-auth-title {
+  text-align: center;
+  letter-spacing: 0.25em;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 2.5rem;
+  color: #d4af37;
+}
+
+/* FORM */
+.lux-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* INPUTS */
+.lux-input {
+  height: 56px;
+  padding: 0 1.4rem;
+  border-radius: 16px;
+  background: #111;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #f5f5f5;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  transition: all 0.35s ease;
+}
+
+.lux-input::placeholder {
+  color: rgba(212, 175, 55, 0.5);
+}
+
+.lux-input:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
+.lux-input:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+}
+
+/* BUTTON */
+.lux-button {
+  height: 58px;
+  margin-top: 0.5rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #d4af37, #f6e27a);
+  border: none;
+  font-size: 0.95rem;
+  letter-spacing: 0.25em;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.35s ease;
+}
+
+.lux-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(212, 175, 55, 0.45);
+}
+
+/* ERROR */
+.lux-error {
+  text-align: center;
+  color: #ff5f5f;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
+
+/* SWITCH */
+.lux-switch {
+  text-align: center;
+  margin-top: 1.2rem;
+}
+
+.lux-switch span {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: rgba(212, 175, 55, 0.7);
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.lux-switch span:hover {
+  color: #d4af37;
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper .eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.password-wrapper .eye:hover {
+  opacity: 1;
+}
