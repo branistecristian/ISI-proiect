@@ -1,0 +1,95 @@
+.quote-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 3rem;
+  text-align: center;
+}
+
+.quote-title {
+  font-size: 2rem;
+  letter-spacing: 0.2em;
+  color: #d4af37;
+  margin-bottom: 2rem;
+}
+
+.quote-textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: #0f0f0f;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #f5f5f5;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  resize: none;
+  transition: all 0.35s ease;
+}
+
+.quote-textarea::placeholder {
+  color: rgba(212, 175, 55, 0.45);
+}
+
+.quote-textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25);
+}
+
+.quote-button {
+  margin-top: 2rem;
+  height: 56px;
+  width: 100%;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #d4af37, #f7e7a8);
+  border: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.35s ease;
+}
+
+.quote-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(212, 175, 55, 0.45);
+}
+
+.quote-success {
+  margin-top: 1.5rem;
+  color: #d4af37;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+}
+
+/* LIST */
+.quote-list {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.quote-card {
+  padding: 1.8rem;
+  border-radius: 18px;
+  background: #0c0c0c;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.quote-text {
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: #f5f5f5;
+  margin-bottom: 1.2rem;
+}
+
+.quote-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: rgba(212, 175, 55, 0.6);
+}

@@ -1,0 +1,52 @@
+.map-container {
+  width: 100%;
+  height: calc(100vh - 140px); /* ajustat pt navbar */
+  position: relative;
+  z-index: 0;
+}
+/* Search bar peste hartă */
+.leaflet-control-geosearch {
+  z-index: 1000 !important;
+}
+/* Container search */
+.leaflet-control-geosearch form {
+  background: #111;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+/* Input */
+.leaflet-control-geosearch input {
+  background: #000;
+  color: #d4af37; /* gold */
+  border: 1px solid #d4af37;
+  font-size: 14px;
+  padding: 10px;
+}
+
+/* Placeholder */
+.leaflet-control-geosearch input::placeholder {
+  color: #999;
+}
+
+/* Rezultate dropdown */
+.leaflet-control-geosearch .results {
+  background: #111;
+  border-radius: 10px;
+  border: 1px solid #333;
+}
+
+/* Item rezultat */
+.leaflet-control-geosearch .results > div {
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+}
+
+/* Hover pe rezultat */
+.leaflet-control-geosearch .results > div:hover {
+  background: #d4af37;
+  color: #000;
+}
+

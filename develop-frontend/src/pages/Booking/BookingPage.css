@@ -1,0 +1,66 @@
+.booking-title {
+  color: #d4af37;
+  margin-bottom: 20px;
+}
+
+.booking-list {
+  display: grid;
+  gap: 16px;
+}
+
+.booking-card {
+  background: rgba(10, 10, 10, 0.85);
+  border: 1px solid #d4af37;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+}
+
+.booking-card h3 {
+  margin-bottom: 8px;
+}
+.booking-tag {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.booking-tag.map {
+  background: #1a1a1a;
+  border: 1px solid #d4af37;
+  color: #d4af37;
+}
+
+.booking-tag.island {
+  background: #102a2a;
+  color: #7fffd4;
+}
+
+.booking-tag.jet {
+  background: #2a102a;
+  color: #d4af37;
+}
+.booking-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-booking {
+  background: transparent;
+  border: 1px solid #a33;
+  color: #ff6b6b;
+  font-size: 1.1rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.remove-booking:hover {
+  background: #ff6b6b;
+  color: #000;
+}
