@@ -78,42 +78,39 @@ export default function IslandDetailsPage({
   /* ================= BOOKING (REAL + FALLBACK) ================= */
 
   const handleReserve = async () => {
-    const localBooking = {
-      id: `local-${Date.now()}`,
-      type: "ISLAND",
-      islandName: island.name,
+  const bookingForUI = {
+    from: island.name,
+    to: island.location,
+    date: `${checkIn} → ${checkOut}`,
+    source: "island" as const,
+  };
+
+  // 🔹 1. Salvăm ÎNTOTDEAUNA în localStorage (pentru BookingPage)
+  const existing = JSON.parse(
+    localStorage.getItem("bookings") || "[]"
+  );
+
+  localStorage.setItem(
+    "bookings",
+    JSON.stringify([bookingForUI, ...existing])
+  );
+
+  // 🔹 2. Încercăm backend (best effort)
+  try {
+    await BookingControllerService.create({
+      type: Booking.type.ISLAND,
       islandId: island.id,
       startDate: checkIn,
       endDate: checkOut,
-      nights,
-      totalPrice,
-      status: "CONFIRMED",
-      createdAt: new Date().toISOString(),
-      source: "frontend-fallback",
-    };
+    });
+  } catch {
+    console.warn("Backend booking failed, using local booking only");
+  }
 
-    try {
-      // 👉 încercăm backend
-      await BookingControllerService.create({
-        type: Booking.type.ISLAND,
-        islandId: island.id,
-        startDate: checkIn,
-        endDate: checkOut,
-      });
-    } catch {
-      // 👉 FALLBACK DEMO
-      const existing = JSON.parse(
-        localStorage.getItem("bookings") || "[]"
-      );
+  // 🔹 3. Navigăm la BookingPage
+  onConfirmBooking();
+};
 
-      localStorage.setItem(
-        "bookings",
-        JSON.stringify([localBooking, ...existing])
-      );
-    }
-
-    onConfirmBooking(); // mergem la BookingPage
-  };
 
   /* ================= RENDER ================= */
 
