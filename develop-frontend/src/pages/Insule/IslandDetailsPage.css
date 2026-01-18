@@ -144,3 +144,33 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
 }
+
+.fav-btn {
+  position: absolute;
+  right: 18px;
+  top: 45px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffd700;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.fav-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.fav-btn.active {
+  background: rgba(255, 215, 0, 0.18);
+  border-color: rgba(255, 215, 0, 0.75);
+}
+
+.fav-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
