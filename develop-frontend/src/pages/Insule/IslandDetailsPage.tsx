@@ -104,8 +104,6 @@ export default function IslandDetailsPage({
       endDate: checkOut,
     });
   } catch {
-    // ❌ backend poate da 403 / 500 / orice
-    // 👉 NU ne interesează pentru UI
     console.warn("Backend booking failed, using local booking only");
   }
 
