@@ -5,6 +5,8 @@ import jet1 from "../../assets/jet1.webp";
 import type { LatLngTuple } from "leaflet";
 import { PublicJetsControllerService } from "../../api/generated/services/PublicJetsControllerService";
 import { JetResponse } from "../../api/generated/models/JetResponse";
+import { BookingControllerService } from "../../api/generated/services/BookingControllerService";
+import { Booking } from "../../api/generated/models/Booking";
 
 import { addLocalBooking } from "../../utils/booking";
 
@@ -110,23 +112,35 @@ export default function AvioanePage() {
   const [geoError, setGeoError] = useState<string | null>(null);
 
   // Fetch jets from backend
-useEffect(() => {
-  setLoading(true);
+const [apiFailed, setApiFailed] = useState(false);
 
-  PublicJetsControllerService.list(search || undefined)
+useEffect(() => {
+  let cancelled = false;
+
+  setLoading(true);
+  setApiFailed(false);
+
+  PublicJetsControllerService.list(search?.trim() || undefined)
     .then((data) => {
-      if (!data || data.length === 0) {
-        // backend ok, dar fără rezultate
-        setJets(FALLBACK_JETS);
-      } else {
-        setJets(data);
-      }
+      if (cancelled) return;
+
+      // ✅ backend OK: show exactly what it returns (even empty)
+      setJets(data ?? []);
     })
     .catch(() => {
-      // backend picat / 403 / 500 etc
+      if (cancelled) return;
+
+      // ✅ backend failed: fallback to demo jets
+      setApiFailed(true);
       setJets(FALLBACK_JETS);
     })
-    .finally(() => setLoading(false));
+    .finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+  return () => {
+    cancelled = true;
+  };
 }, [search]);
 
 
@@ -185,30 +199,32 @@ useEffect(() => {
   }, [selectedJet, destinationCoords]);
   
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedJet || !computed) return;
 
-    // Save in localStorage bookings so it shows in BookingPage
-    addLocalBooking({
-      id: `jet-${Date.now()}`,
-      from: "Otopeni (OTP)",
-      to: destinationText || selectedJet.model || "Destination",
-      date: `One-way • ~${computed.hours.toFixed(1)}h`,
-      source: "jet",
-      meta: {
-        jetModel: selectedJet.model,
-        capacity: selectedJet.capacity,
-        rangeKm: selectedJet.rangeKm,
-        pricePerHour: selectedJet.pricePerHour,
-        distanceKm: computed.distanceKm,
-        hours: computed.hours,
-        totalPrice: computed.totalPrice,
-        reachable: computed.canReach,
-      },
-    });
+    try {
+      const start = new Date();              // azi
+      const end = new Date(start);           // copie
+      end.setDate(end.getDate() + 1);        // +1 zi
 
-    alert(`Rezervare creată ✅ (${selectedJet.model})`);
-    closeJetModal();
+      const startDate = start.toISOString().slice(0, 10);
+      const endDate = end.toISOString().slice(0, 10);
+
+      await BookingControllerService.create({
+        type: Booking.type.JET,
+        jetId: String(selectedJet.id),
+        startDate,
+        endDate,
+        notes: destinationText ? `Destination: ${destinationText}` : undefined,
+      });
+
+      alert(`Rezervare salvată ✅ (${selectedJet.model})`);
+      closeJetModal();
+    } catch (e: any) {
+      const status = e?.status ?? e?.response?.status;
+      const msg = e?.body?.message || e?.message || (status ? `Request failed (${status})` : "Request failed");
+      alert(`Nu s-a putut salva rezervarea: ${msg}`);
+    }
   };
 
   return (
@@ -265,9 +281,11 @@ useEffect(() => {
                   </button>
                 </motion.div>
               ))
-            ) : (
-              <p className="no-results">Niciun avion găsit.</p>
-            )}
+            ) : apiFailed ? (
+            <p className="no-results">Nu putem încărca avioanele acum (server error). Afișăm demo jets.</p>
+          ) : (
+            <p className="no-results">Niciun avion găsit pentru “{search}”.</p>
+          )}
           </div>
         )}
       </motion.div>
