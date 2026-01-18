@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./App.css";
 
-import LoginPage from "./pages/Auth/LoginPage";
+import LoginPage from "./pages/Auth/LoginSignUpPage";
 import HomePage from "./pages/Home/HomePage";
 import InsulePage from "./pages/Insule/InsulePage";
 import IslandDetailsPage from "./pages/Insule/IslandDetailsPage";
@@ -42,9 +42,11 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
-  };
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("token");
+
+  setIsLoggedIn(false);
+};
 
 const handleBookingSuccess = () => {
   setPage("booking");

@@ -41,8 +41,6 @@ class SecurityConfig(
         }
     }
 
-    // ... importuri ...
-
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
