@@ -237,7 +237,12 @@ export default function IslandDetailsPage({ island, onConfirmBooking, onBack }: 
       <div className="island-details-card">
         <p className="description">{island.description}</p>
 
-        <IslandMap location={island.location} name={island.name} />
+        <IslandMap
+          location={island.location}
+          name={island.name}
+          lat={island.lat}
+          lng={island.lng}
+        />
 
         <div className="price-row">
           <span>Preț / noapte</span>

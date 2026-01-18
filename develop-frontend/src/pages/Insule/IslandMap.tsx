@@ -21,16 +21,22 @@ L.Icon.Default.mergeOptions({
 const OTP: LatLngTuple = [44.5711, 26.0850];
 
 /* Geocoding simplu din STRING (location din backend) */
-async function geocodeLocation(
-  location: string
-): Promise<LatLngTuple | null> {
+async function geocodeLocation(q: string): Promise<LatLngTuple | null> {
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      location
-    )}`
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
+    {
+      headers: {
+        "Accept": "application/json",
+        "Accept-Language": "en",
+      },
+    }
   );
+
+  if (!res.ok) return null;
+
   const data = await res.json();
-  if (!data || data.length === 0) return null;
+  if (!data?.length) return null;
+
   return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
 }
 
@@ -55,16 +61,37 @@ function haversineDistance(
 export default function IslandMap({
   location,
   name,
+  lat,
+  lng,
 }: {
   location: string;
   name: string;
+  lat?: number | null;
+  lng?: number | null;
 }) {
-  const [destination, setDestination] =
-    useState<LatLngTuple | null>(null);
+  const [destination, setDestination] = useState<LatLngTuple | null>(null);
 
   useEffect(() => {
-    geocodeLocation(location).then(setDestination);
-  }, [location]);
+    let cancelled = false;
+
+    const la = Number(lat);
+    const lo = Number(lng);
+
+    // ✅ dacă ai coordonate, folosește-le direct
+    if (isFinite(la) && isFinite(lo)) {
+      setDestination([la, lo]);
+      return;
+    }
+
+    // ✅ fallback: geocode mai precis (name + location) + limit=1
+    geocodeLocation(`${name}, ${location}`).then((coords) => {
+      if (!cancelled) setDestination(coords);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lat, lng, name, location]);
 
   if (!destination) {
     return <p style={{ opacity: 0.6 }}>Se încarcă harta...</p>;
