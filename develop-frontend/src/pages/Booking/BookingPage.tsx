@@ -5,6 +5,8 @@ import "./BookingPage.css";
 import { getLocalBookings, type LocalBooking } from "../../utils/booking";
 import { BookingControllerService } from "../../api/generated/services/BookingControllerService";
 import type { BookingResponse } from "../../api/generated/models/BookingResponse";
+import { PublicIslandsControllerService } from "../../api/generated/services/PublicIslandsControllerService";
+import { PublicJetsControllerService } from "../../api/generated/services/PublicJetsControllerService";
 
 type UiBooking = {
   id: string;
@@ -53,15 +55,56 @@ export default function BookingPage() {
       setLoading(true);
       setError("");
 
-      try {
-        const res = await BookingControllerService.mine();
-        const mapped = (res ?? []).map(mapBackendBooking);
+    try {
+      const res = await BookingControllerService.mine();
+      const backend = res ?? [];
 
-        if (!cancelled) {
-          setBookings(mapped);
-          setError("");
-        }
-      } catch (e) {
+      // Cache to avoid multiple calls for same itemId
+      const islandNameCache = new Map<string, string>();
+      const jetNameCache = new Map<string, string>();
+
+      const mapped: UiBooking[] = await Promise.all(
+        backend.map(async (b) => {
+          const type = b.type;
+
+          let itemName = `Item: ${b.itemId}`;
+
+          try {
+            if (type === "ISLAND") {
+              if (!islandNameCache.has(b.itemId)) {
+                const island = await PublicIslandsControllerService.details1(b.itemId);
+                islandNameCache.set(b.itemId, island?.name ?? `Island (${b.itemId.slice(0, 6)}...)`);
+              }
+              itemName = islandNameCache.get(b.itemId)!;
+            } else {
+              // JET
+              if (!jetNameCache.has(b.itemId)) {
+                const jet = await PublicJetsControllerService.details(b.itemId);
+                jetNameCache.set(b.itemId, jet?.model ?? `Jet (${b.itemId.slice(0, 6)}...)`);
+              }
+              itemName = jetNameCache.get(b.itemId)!;
+            }
+          } catch {
+            // keep fallback itemName
+          }
+
+          return {
+            id: b.id,
+            from: type === "ISLAND" ? "🏝️ Island" : "✈️ Jet",
+            to: itemName, // ✅ name now
+            date: `${b.startDate} → ${b.endDate}`,
+            source: type,
+            status: b.status,
+            backend: true,
+          };
+        })
+      );
+
+      if (!cancelled) {
+        setBookings(mapped);
+        setError("");
+      }
+    }  catch (e) {
         // fallback local
         if (!cancelled) {
           setError(normalizeError(e));
@@ -93,25 +136,30 @@ export default function BookingPage() {
   const handleRemoveBooking = async (id: string) => {
     const booking = bookings.find((b) => b.id === id);
     if (!booking) return;
-    if (booking.backend && !canCancel(String(booking.status))) {
+
+    if (!booking.backend) {
+      const updatedLocal = localFallback.filter((b) => b.id !== id);
+      localStorage.setItem("bookings", JSON.stringify(updatedLocal));
+      setBookings((cur) => cur.filter((b) => b.id !== id));
       return;
     }
+
+    if (!canCancel(String(booking.status))) return;
 
     const prev = bookings;
 
-    // optimistic remove
-    setBookings((cur) => cur.filter((b) => b.id !== id));
+    setBookings((cur) =>
+      cur.map((b) => (b.id === id ? { ...b, status: "CANCELLED" } : b))
+    );
 
-    // if local-only booking -> remove from localStorage
-    if (!booking?.backend) {
-      const updatedLocal = localFallback.filter((b) => b.id !== id);
-      localStorage.setItem("bookings", JSON.stringify(updatedLocal));
-      return;
-    }
-
-    // backend cancel
     try {
-      await BookingControllerService.cancel(id);
+      const updated = await BookingControllerService.cancel(id);
+
+      setBookings((cur) =>
+        cur.map((b) =>
+          b.id === id ? { ...b, status: (updated as any)?.status ?? "CANCELLED" } : b
+        )
+      );
     } catch (e) {
       setBookings(prev); // rollback
       setError(normalizeError(e));
