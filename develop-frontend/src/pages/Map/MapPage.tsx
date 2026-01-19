@@ -7,15 +7,14 @@ import {
   Circle,
   useMapEvents,
 } from "react-leaflet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import L from "leaflet";
-// Importăm LatLngBounds pentru a defini limitele lumii
 import { LatLngBounds } from "leaflet"; 
 import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "./MapPage.css";
+// import "./MapPage.css"; // CSS-ul vechi nu mai este critic pentru layout, folosim stiluri inline pentru structură
 
-// IMPORTURI BACKEND & MODELE (Rămân neschimbate)
+// IMPORTURI BACKEND & MODELE
 import { PublicJetsControllerService } from "../../api/generated/services/PublicJetsControllerService";
 import type { JetResponse } from "../../api/generated/models/JetResponse";
 import { PublicIslandsControllerService } from "../../api/generated/services/PublicIslandsControllerService";
@@ -24,12 +23,9 @@ import type { IslandResponse } from "../../api/generated/models/IslandResponse";
 /* FIX icon Leaflet standard */
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 /* --- ICONS --- */
@@ -158,11 +154,15 @@ export default function MapPage() {
   const [mappedIslands, setMappedIslands] = useState<MappedIsland[]>([]);
   const [stopoverIsland, setStopoverIsland] = useState<MappedIsland | null>(null);
 
-  // LIMITELE LUMII (World Bounds)
+  // --- STATE FILTRE ---
+  const [filterDistance, setFilterDistance] = useState<number | null>(null);
+  const [filterPrice, setFilterPrice] = useState<number | null>(null);
+
+  // LIMITELE LUMII
   const worldBounds = new LatLngBounds(
-    [-90, -180], // Sud-Vest
-    [90, 180]    // Nord-Est
-  );
+    [-85, -180], // Sud-Vest (Limitat la -85, nu -90)
+    [85, 180]    // Nord-Est (Limitat la 85, nu 90)
+);
 
   useEffect(() => {
     setLoadingJets(true);
@@ -216,6 +216,25 @@ export default function MapPage() {
     loadData();
     return () => { cancelled = true; };
   }, []);
+
+  // --- LOGICA DE FILTRARE ---
+  const visibleIslands = useMemo(() => {
+    const startPoint = points[0]; 
+    return mappedIslands.filter(island => {
+        let matchDist = true;
+        if (filterDistance !== null) {
+            const dist = haversineDistance(startPoint, island.coords);
+            if (dist > filterDistance) matchDist = false;
+        }
+        let matchPrice = true;
+        if (filterPrice !== null) {
+            if (!island.pricePerNight || island.pricePerNight > filterPrice) {
+                matchPrice = false;
+            }
+        }
+        return matchDist && matchPrice;
+    });
+  }, [mappedIslands, filterDistance, filterPrice, points]);
 
   const destination = points[1];
   const maxRange = selectedJet?.rangeKm ?? 0;
@@ -276,150 +295,199 @@ export default function MapPage() {
       setPoints(prev => [prev[0], coords]);
   };
 
+  // Styles pentru controale
+  const selectStyle: React.CSSProperties = {
+      padding: '6px 10px',
+      borderRadius: '6px',
+      border: '1px solid #555',
+      background: '#333',
+      color: '#fff',
+      fontSize: '13px',
+      outline: 'none',
+      cursor: 'pointer'
+  };
+
+  const labelStyle: React.CSSProperties = {
+      fontSize: '12px',
+      color: '#aaa',
+      marginBottom: '2px',
+      display: 'block'
+  };
+
   return (
     <div style={{ 
-        position: "relative", 
-        height: "calc(100vh - 100px)", 
+        display: "flex", 
+        flexDirection: "column", 
+        height: "calc(100vh - 80px)", // Ajustăm înălțimea totală
         width: "95%", 
         margin: "20px auto", 
         borderRadius: "16px", 
         overflow: "hidden", 
         boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-        border: "1px solid #333"
+        border: "1px solid #333",
+        background: '#1a1a1a'
     }}>
         
-      <div className="map-info-panel">
-        <h3>Flight Planner 🗺️</h3>
-        <div className="control-group">
-            <label>Alege Aeronava:</label>
-            {loadingJets ? (
-              <p style={{fontSize: '12px', color: '#888'}}>Se încarcă flota...</p>
-            ) : (
-              <select 
-                  className="jet-select"
-                  value={selectedJet?.id}
-                  onChange={(e) => {
-                      const jet = jets.find(j => j.id === e.target.value);
-                      if(jet) setSelectedJet(jet);
-                  }}
-              >
-                  {jets.map(jet => (
-                      <option key={jet.id} value={jet.id}>
-                          {jet.model} ({jet.rangeKm} km)
-                      </option>
-                  ))}
-              </select>
-            )}
-        </div>
+      {/* ==================== BARA DE SUS (FILTRE & INFO) ==================== */}
+      <div style={{
+          background: '#222',
+          padding: '15px 20px',
+          borderBottom: '1px solid #333',
+          display: 'flex',
+          gap: '20px',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap'
+      }}>
+          
+          {/* GRUP STÂNGA: FILTRE */}
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <h3 style={{ margin: 0, color: 'white', marginRight: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  ✈️ <span style={{fontSize: '1.1rem'}}>Planner</span>
+              </h3>
 
-        <div className="route-details">
-            <p><strong>Origine:</strong> Otopeni (OTP)</p>
-            <p><strong>Destinație:</strong> {destination ? `${destination[0].toFixed(2)}, ${destination[1].toFixed(2)}` : "Click pe hartă"}</p>
-        </div>
-        
-        {destination && selectedJet && (
-            <div className={`range-status ${isDirectPossible ? "ok" : (stopoverIsland ? "warning" : "alert")}`}>
-                {isDirectPossible && (
-                    <>
-                        <p>Distanță: <strong>{directDistance.toFixed(0)} km</strong></p>
-                        <p>Range: <strong>{maxRange} km</strong></p>
-                        <p style={{marginTop:'4px'}}>⏱️ Timp estimat: <strong>{flightTimeStr}</strong></p>
-                        <hr style={{borderColor: 'rgba(255,255,255,0.1)', margin: '8px 0'}}/>
-                        <p style={{fontWeight: 'bold', fontSize: '14px', color: '#4ade80'}}>✅ Zbor Direct Posibil</p>
-                    </>
-                )}
-                {!isDirectPossible && stopoverIsland && (
-                    <>
-                         <p>Dist. Totală: <strong>{totalTripDistance.toFixed(0)} km</strong></p>
-                         <p>Range Avion: <strong>{maxRange} km</strong></p>
-                         <p style={{marginTop:'4px'}}>⏱️ Timp (cu escală): <strong>{flightTimeStr}</strong></p>
-                         <hr style={{borderColor: 'rgba(255,255,255,0.1)', margin: '8px 0'}}/>
-                         <p style={{fontWeight: 'bold', fontSize: '13px', color: '#facc15'}}>⚠️ Escală prin Insulă</p>
-                         <p style={{fontSize: '12px', marginTop: '4px'}}>Oprire la: <strong>{stopoverIsland.name}</strong></p>
-                    </>
-                )}
-                {!isDirectPossible && !stopoverIsland && (
-                    <>
-                        <p>Distanță: <strong>{directDistance.toFixed(0)} km</strong></p>
-                        <p>Range: <strong>{maxRange} km</strong></p>
-                        <hr style={{borderColor: 'rgba(255,255,255,0.1)', margin: '8px 0'}}/>
-                        <p style={{fontWeight: 'bold', fontSize: '14px', color: '#ef4444'}}>❌ Destinație Indisponibilă</p>
-                        <p style={{fontSize: '11px', marginTop: '4px'}}>Nu există nicio insulă intermediară potrivită.</p>
-                    </>
-                )}
-            </div>
-        )}
-        <div className="map-footer-info">
-            <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500', color: '#333' }}>
-                <span>🏝️</span> 
-                <span>{mappedIslands.length} insule disponibile</span>
-            </p>
-        </div>
+              {/* Selector Avion */}
+              <div>
+                  <label style={labelStyle}>Aeronava</label>
+                  {loadingJets ? (
+                      <span style={{color: '#666', fontSize: '12px'}}>...</span>
+                  ) : (
+                      <select style={selectStyle} value={selectedJet?.id} onChange={(e) => {
+                          const j = jets.find(x => x.id === e.target.value);
+                          if(j) setSelectedJet(j);
+                      }}>
+                          {jets.map(j => <option key={j.id} value={j.id}>{j.model} ({j.rangeKm} km)</option>)}
+                      </select>
+                  )}
+              </div>
+
+              {/* Selector Distanță */}
+              <div>
+                  <label style={labelStyle}>Max Dist.</label>
+                  <select style={selectStyle} onChange={(e) => setFilterDistance(e.target.value === 'all' ? null : Number(e.target.value))} defaultValue="all">
+                      <option value="all">🌐 Toate</option>
+                      <option value="1000">{'<'} 1k km</option>
+                      <option value="3000">{'<'} 3k km</option>
+                      <option value="6000">{'<'} 6k km</option>
+                      <option value="10000">{'<'} 10k km</option>
+                  </select>
+              </div>
+
+              {/* Selector Preț */}
+              <div>
+                  <label style={labelStyle}>Max Preț</label>
+                  <select style={selectStyle} onChange={(e) => setFilterPrice(e.target.value === 'all' ? null : Number(e.target.value))} defaultValue="all">
+                      <option value="all">💰 Oricât</option>
+                      <option value="500">{'<'} 500 €</option>
+                      <option value="1000">{'<'} 1k €</option>
+                      <option value="5000">{'<'} 5k €</option>
+                  </select>
+              </div>
+          </div>
+
+          {/* GRUP DREAPTA: STATUS RUTĂ */}
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', background: '#1a1a1a', padding: '8px 15px', borderRadius: '8px', border: '1px solid #333' }}>
+               {/* Ruta */}
+               <div style={{fontSize: '13px', color: '#ccc'}}>
+                   <span style={{color: '#888'}}>Ruta:</span> {destination ? (
+                       <strong>OTP ➝ {destination[0].toFixed(1)},{destination[1].toFixed(1)}</strong>
+                   ) : "Selectează Destinația"}
+               </div>
+
+               {/* Status */}
+               {destination && selectedJet && (
+                   <div style={{fontSize: '13px', fontWeight: 'bold'}}>
+                       {isDirectPossible ? (
+                           <span style={{color: '#4ade80'}}>✅ Direct ({flightTimeStr})</span>
+                       ) : stopoverIsland ? (
+                           <span style={{color: '#facc15'}}>⚠️ Escală: {stopoverIsland.name}</span>
+                       ) : (
+                           <span style={{color: '#ef4444'}}>❌ Indisponibil</span>
+                       )}
+                   </div>
+               )}
+
+               {/* Counter */}
+               <div style={{fontSize: '12px', color: '#666', borderLeft: '1px solid #444', paddingLeft: '15px'}}>
+                   🏝️ {visibleIslands.length}
+               </div>
+          </div>
+
       </div>
 
-      <MapContainer 
-        center={[30, 20]} 
-        zoom={3} 
-        minZoom={2} // LIMITĂ ZOOM OUT
-        maxBounds={worldBounds} // LIMITEAZĂ PANNING-UL LA LUMEA REALĂ
-        maxBoundsViscosity={1.0} // FACE MARGINILE "SOLIDE"
-        className="map-container" 
-        style={{background: '#1a1a1a'}}
-      >
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution="Esri"
-          noWrap={true} // PREVINE DUPLICAREA VIZUALĂ A HĂRȚII
-        />
-        
-        <FlightPlanner setPoints={setPoints} />
-
-        {points[0] && selectedJet && (
-            <Circle 
-                center={points[0]} 
-                radius={maxRange * 1000} 
-                pathOptions={{ interactive: false, color: isDirectPossible ? "#4ade80" : "#ef4444", fillColor: isDirectPossible ? "#4ade80" : "#ef4444", fillOpacity: 0.1, weight: 2, dashArray: "5, 10" }} 
+      {/* ==================== HARTA (Flex 1 - Ocupă restul) ==================== */}
+      <div style={{ flex: 1, position: 'relative' }}>
+          <MapContainer 
+            center={[30, 20]} 
+            zoom={3} 
+            minZoom={2.5}
+            maxBounds={worldBounds} 
+            maxBoundsViscosity={1.0} 
+            className="map-container" 
+            style={{background: '#0f172a', height: '100%', width: '100%'}}
+          >
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              attribution="Esri"
+              noWrap={true} 
             />
-        )}
+            
+            <FlightPlanner setPoints={setPoints} />
 
-        {mappedIslands.map((island) => (
-            <Marker 
-                key={island.id} 
-                position={island.coords} 
-                icon={stopoverIsland?.id === island.id ? stopoverIcon : palmIcon}
-                zIndexOffset={stopoverIsland?.id === island.id ? 1000 : 0}
-                eventHandlers={{ click: () => handleIslandClick(island.coords) }}
-            >
-                <Popup>
-                    <div style={{textAlign: 'center'}}>
-                        <strong style={{fontSize: '14px', color: '#333'}}>{island.name}</strong><br/>
-                        <span style={{fontSize: '12px', color: '#666'}}>{island.location}</span><br/>
-                        <strong style={{color: '#d4af37'}}>{island.pricePerNight} €</strong><br/>
-                        {stopoverIsland?.id === island.id && (
-                            <div style={{marginTop: '5px', marginBottom: '5px', padding: '4px', background: '#fef3c7', color: '#d97706', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold'}}>Punct de Escală Optim</div>
-                        )}
-                        <button style={{marginTop: '5px', background: '#0f172a', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}} onClick={() => handleIslandClick(island.coords)}>Setează Destinație</button>
-                    </div>
-                </Popup>
-            </Marker>
-        ))}
+            {/* Cerc Range */}
+            {points[0] && selectedJet && (
+                <Circle 
+                    center={points[0]} 
+                    radius={maxRange * 1000} 
+                    pathOptions={{ interactive: false, color: isDirectPossible ? "#4ade80" : "#ef4444", fillColor: isDirectPossible ? "#4ade80" : "#ef4444", fillOpacity: 0.1, weight: 2, dashArray: "5, 10" }} 
+                />
+            )}
 
-        {points[0] && <Marker position={points[0]}><Popup><strong>From</strong><br />Otopeni</Popup></Marker>}
-        {points[1] && <Marker position={points[1]}><Popup><strong>To</strong><br />Destination</Popup></Marker>}
+            {/* Markere Insule */}
+            {visibleIslands.map((island) => (
+                <Marker 
+                    key={island.id} 
+                    position={island.coords} 
+                    icon={stopoverIsland?.id === island.id ? stopoverIcon : palmIcon}
+                    zIndexOffset={stopoverIsland?.id === island.id ? 1000 : 0}
+                    eventHandlers={{ click: () => handleIslandClick(island.coords) }}
+                >
+                    <Popup>
+                        <div style={{textAlign: 'center'}}>
+                            <strong style={{fontSize: '14px', color: '#333'}}>{island.name}</strong><br/>
+                            <span style={{fontSize: '12px', color: '#666'}}>{island.location}</span><br/>
+                            <strong style={{color: '#d4af37'}}>{island.pricePerNight} €</strong><br/>
+                            <div style={{fontSize: '11px', marginTop: '4px', color: '#666'}}>
+                                Distanță: {haversineDistance(points[0], island.coords).toFixed(0)} km
+                            </div>
+                            {stopoverIsland?.id === island.id && (
+                                <div style={{marginTop: '5px', marginBottom: '5px', padding: '4px', background: '#fef3c7', color: '#d97706', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold'}}>Punct de Escală Optim</div>
+                            )}
+                            <button style={{marginTop: '5px', background: '#0f172a', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}} onClick={() => handleIslandClick(island.coords)}>Setează Destinație</button>
+                        </div>
+                    </Popup>
+                </Marker>
+            ))}
 
-        {destination && isDirectPossible && (
-          <Polyline positions={getGeodesicPath(points[0], destination)} pathOptions={{ color: "#d4af37", weight: 4, opacity: 0.9, dashArray: "10 10" }} />
-        )}
+            {/* Start / End Markers */}
+            {points[0] && <Marker position={points[0]}><Popup><strong>From</strong><br />Otopeni</Popup></Marker>}
+            {points[1] && <Marker position={points[1]}><Popup><strong>To</strong><br />Destination</Popup></Marker>}
 
-        {destination && !isDirectPossible && stopoverIsland && (
-            <>
-                <Polyline positions={getGeodesicPath(points[0], stopoverIsland.coords)} pathOptions={{ color: "#facc15", weight: 4, opacity: 0.9, dashArray: "5 5" }} />
-                <Polyline positions={getGeodesicPath(stopoverIsland.coords, destination)} pathOptions={{ color: "#facc15", weight: 4, opacity: 0.9, dashArray: "5 5" }} />
-            </>
-        )}
+            {/* Rute */}
+            {destination && isDirectPossible && (
+              <Polyline positions={getGeodesicPath(points[0], destination)} pathOptions={{ color: "#d4af37", weight: 4, opacity: 0.9, dashArray: "10 10" }} />
+            )}
 
-        {planePos && <Marker position={planePos} icon={planeIcon} />}
-      </MapContainer>
+            {destination && !isDirectPossible && stopoverIsland && (
+                <>
+                    <Polyline positions={getGeodesicPath(points[0], stopoverIsland.coords)} pathOptions={{ color: "#facc15", weight: 4, opacity: 0.9, dashArray: "5 5" }} />
+                    <Polyline positions={getGeodesicPath(stopoverIsland.coords, destination)} pathOptions={{ color: "#facc15", weight: 4, opacity: 0.9, dashArray: "5 5" }} />
+                </>
+            )}
+
+            {planePos && <Marker position={planePos} icon={planeIcon} />}
+          </MapContainer>
+      </div>
     </div>
   );
 }
