@@ -1,23 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useLocation } from "react-router-dom"; // Importăm useLocation pentru a detecta ?success=true
+import { useLocation, useNavigate } from "react-router-dom"; 
 import "./BookingPage.css";
 
 import { getLocalBookings, type LocalBooking } from "../../utils/booking";
 
-// Importurile generate
+// Importurile generate automat
 import { BookingControllerService } from "../../api/generated/services/BookingControllerService";
 import type { BookingResponse } from "../../api/generated/models/BookingResponse";
 import { PublicIslandsControllerService } from "../../api/generated/services/PublicIslandsControllerService";
 import { PublicJetsControllerService } from "../../api/generated/services/PublicJetsControllerService";
 import { OpenAPI } from "../../api/generated/core/OpenAPI"; 
 
+// Definim tipul UI extins
 type UiBooking = {
   id: string;
   from: string;
   to: string;
   date: string;
   source: "ISLAND" | "JET" | "LOCAL";
+  // Adăugăm '| string' pentru că 'PAID' nu e încă în enum-ul generat de frontend
   status?: BookingResponse.status | string;
   backend: boolean;
   price?: number;
@@ -37,12 +39,13 @@ export default function BookingPage() {
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Hook pentru a citi URL-ul (pentru success message de la Stripe)
+  // Hook-uri pentru URL și Navigare
   const location = useLocation();
+  const navigate = useNavigate();
 
   const localFallback: LocalBooking[] = useMemo(() => getLocalBookings(), []);
 
-  // --- LOGICA DE PLATĂ REALĂ (STRIPE) ---
+  // --- 1. LOGICA DE PLATĂ (Trimite spre Stripe) ---
   const handlePayment = async (booking: UiBooking) => {
     if (!booking.price) return;
     setProcessingId(booking.id);
@@ -50,7 +53,7 @@ export default function BookingPage() {
     try {
       console.log(`Inițiere plată Stripe pentru: ${booking.id}`);
 
-      // Luăm token-ul
+      // Recuperăm token-ul
       const token = localStorage.getItem("token") || localStorage.getItem("accessToken"); 
 
       if (!token) {
@@ -58,9 +61,10 @@ export default function BookingPage() {
         return;
       }
 
-      // Important: Asigurăm că OpenAPI are token-ul setat înainte de orice request
+      // Asigurăm token-ul în OpenAPI
       OpenAPI.TOKEN = token;
 
+      // Apelăm endpoint-ul creat de noi în PaymentController
       const response = await fetch("http://localhost:8080/api/payments/create-checkout-session", {
         method: "POST",
         headers: {
@@ -94,7 +98,7 @@ export default function BookingPage() {
     }
   };
 
-  // --- ÎNCĂRCARE DATE ---
+  // --- 2. ÎNCĂRCARE DATE + PROCESARE SUCCES STRIPE ---
   useEffect(() => {
     let cancelled = false;
 
@@ -103,15 +107,36 @@ export default function BookingPage() {
       setError("");
 
       try {
-        // --- FIXUL PENTRU LOGOUT ---
-        // Când te întorci de la Stripe, pagina se reîncarcă și OpenAPI uită token-ul.
-        // Îl citim din localStorage și îl punem la loc MANUAL înainte de a face cererea.
+        // A. Restaurare Token (Critic după redirect)
         const storedToken = localStorage.getItem("token") || localStorage.getItem("accessToken");
         if (storedToken) {
             OpenAPI.TOKEN = storedToken;
         }
-        // ---------------------------
 
+        // B. Verificăm dacă ne-am întors de la Stripe cu SUCCES
+        const params = new URLSearchParams(location.search);
+        const success = params.get("success");
+        const paidBookingId = params.get("bookingId");
+
+        if (success === "true" && paidBookingId && storedToken) {
+            try {
+                // Apelăm backend-ul să marcheze "PAID"
+                const confirmRes = await fetch(`http://localhost:8080/api/payments/${paidBookingId}/success`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${storedToken}` }
+                });
+                
+                if (confirmRes.ok) {
+                   // Curățăm URL-ul (scoatem ?success=true) fără refresh
+                   navigate("/booking", { replace: true });
+                   // Opțional: alert("Plată confirmată! Status: PAID");
+                }
+            } catch (err) {
+                console.error("Eroare la confirmarea plății pe backend", err);
+            }
+        }
+
+        // C. Încărcăm lista de rezervări (care acum ar trebui să fie actualizată)
         const res = await BookingControllerService.mine();
         const backend = res ?? [];
 
@@ -135,11 +160,18 @@ export default function BookingPage() {
                 }
                 const cached = islandCache.get(b.itemId)!;
                 itemName = cached.name;
-                itemPrice = cached.price; 
+                // Calculăm prețul total estimat pentru UI
+                // Backend-ul calculează exact la plată, aici e doar vizual
+                const start = new Date(b.startDate);
+                const end = new Date(b.endDate);
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+                itemPrice = cached.price * diffDays; 
               } else {
                 // JET
                 if (!jetCache.has(b.itemId)) {
                   const jet = await PublicJetsControllerService.details(b.itemId);
+                  // Estimare simplă: 3 ore * preț orar
                   const estimatedPrice = jet?.pricePerHour ? jet.pricePerHour * 3 : 5000; 
                   jetCache.set(b.itemId, {
                     name: jet?.model ?? `Jet ${b.itemId.slice(0, 6)}`,
@@ -195,20 +227,22 @@ export default function BookingPage() {
     return () => {
       cancelled = true;
     };
-  }, [localFallback]);
+  }, [localFallback, location.search, navigate]);
 
-  // Afișăm un mesaj frumos dacă plata a reușit
-  const isSuccess = new URLSearchParams(location.search).get("success");
-
-  // ... restul funcțiilor (handleRemoveBooking, canCancel) rămân la fel ...
-  const canCancel = (status?: string) =>
-    status !== "CANCELLED" && status !== "REJECTED" && status !== "CONFIRMED";
+  // Funcție helper pentru a decide dacă putem anula
+  const canCancel = (status?: string) => {
+      // Nu poți anula dacă e PAID sau CONFIRMED (doar PENDING)
+      if (status === 'PAID' || status === 'CONFIRMED' || status === 'CANCELLED' || status === 'REJECTED') {
+          return false;
+      }
+      return true;
+  };
 
   const handleRemoveBooking = async (id: string) => {
     const booking = bookings.find((b) => b.id === id);
     if (!booking) return;
 
-    // Asigurăm token-ul și pentru ștergere
+    // Asigurăm token
     const storedToken = localStorage.getItem("token");
     if (storedToken) OpenAPI.TOKEN = storedToken;
 
@@ -222,6 +256,7 @@ export default function BookingPage() {
     if (!canCancel(String(booking.status))) return;
 
     const prev = bookings;
+    // Optimistic Update
     setBookings((cur) =>
       cur.map((b) => (b.id === id ? { ...b, status: "CANCELLED" } : b))
     );
@@ -234,7 +269,7 @@ export default function BookingPage() {
         )
       );
     } catch (e) {
-      setBookings(prev);
+      setBookings(prev); // Rollback la eroare
       setError(normalizeError(e));
     }
   };
@@ -242,22 +277,6 @@ export default function BookingPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <h1 className="booking-title">My Bookings ✈️</h1>
-
-      {/* Mesaj de succes la întoarcerea de la Stripe */}
-      {isSuccess && (
-        <div style={{
-            background: 'rgba(74, 222, 128, 0.15)', 
-            border: '1px solid #4ade80', 
-            color: '#4ade80', 
-            padding: '15px', 
-            borderRadius: '8px',
-            marginBottom: '20px',
-            textAlign: 'center',
-            fontWeight: 'bold'
-        }}>
-            🎉 Plata a fost realizată cu succes! Rezervarea ta este confirmată.
-        </div>
-      )}
 
       {loading && <p style={{ opacity: 0.6 }}>Loading bookings...</p>}
 
@@ -284,12 +303,18 @@ export default function BookingPage() {
 
                   <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                       {b.status && (
-                        <span className={`status-badge ${String(b.status).toLowerCase()}`} 
+                        <span className={`status-badge`} 
                               style={{ 
                                   padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', border: '1px solid #444',
-                                  color: b.status === 'CONFIRMED' ? '#4ade80' : '#facc15' 
+                                  // LOGICA DE CULORI
+                                  color: b.status === 'CONFIRMED' ? '#4ade80' : 
+                                         b.status === 'PAID' ? '#60a5fa' : // Albastru deschis
+                                         '#facc15', // Galben
+                                  borderColor: b.status === 'CONFIRMED' ? '#4ade80' : 
+                                               b.status === 'PAID' ? '#60a5fa' : 
+                                               '#facc15'
                               }}>
-                          {String(b.status)}
+                          {b.status === 'PAID' ? 'WAITING APPROVAL' : String(b.status)}
                         </span>
                       )}
                       <span className={`booking-tag ${b.source.toLowerCase()}`}>
@@ -310,7 +335,7 @@ export default function BookingPage() {
 
                     <div style={{ display: 'flex', gap: '10px' }}>
                         
-                        {/* Buton PLATĂ */}
+                        {/* 1. Buton PLATĂ: Doar dacă e PENDING */}
                         {b.backend && b.status === 'PENDING' && (
                             <button 
                                 onClick={() => handlePayment(b)}
@@ -326,7 +351,14 @@ export default function BookingPage() {
                             </button>
                         )}
 
-                        {/* Buton DELETE */}
+                        {/* 2. Text informativ dacă e PAID */}
+                        {b.status === 'PAID' && (
+                             <span style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: '0.9rem', padding: '6px 0' }}>
+                                 ⏳ Processing...
+                             </span>
+                        )}
+
+                        {/* 3. Buton DELETE: Doar dacă NU e PAID sau CONFIRMED */}
                         {(!b.backend || canCancel(String(b.status))) && (
                             <button 
                                 className="remove-booking" 
