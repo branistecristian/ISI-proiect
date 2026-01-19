@@ -22,6 +22,8 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
+	implementation ("com.stripe:stripe-java:24.0.0")
+
 	// OpenAPI
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 

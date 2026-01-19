@@ -1,31 +1,111 @@
-.booking-title {
+/* --- LAYOUT GENERAL PAGINĂ --- */
+.booking-page {
+  padding: 40px;
+  background-color: #0a0a0a;
+  /* Fundal foarte închis, conform stilului tău */
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Header */
+.booking-header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.booking-header h2 {
+  font-size: 28px;
   color: #d4af37;
-  margin-bottom: 20px;
+  /* Culoarea ta Gold */
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
+/* Lista de Carduri */
 .booking-list {
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Spațiu între carduri */
 }
 
+/* --- CARDUL DE BOOKING (HIBRID) --- */
+/* Combinăm bordura ta aurie cu layout-ul flex pentru butonul de plată */
 .booking-card {
-  background: rgba(10, 10, 10, 0.85);
+  /* Stiluri Vizuale (De la tine) */
+  background: rgba(16, 16, 16, 0.95);
   border: 1px solid #d4af37;
+  /* Bordura aurie */
   border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  padding: 24px;
+  /* Padding mai generos */
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  /* Glow auriu subtil */
+
+  /* Stiluri de Layout (Pentru a alinia elementele) */
+  display: flex;
+  justify-content: space-between;
+  /* Aruncă info în stânga și plata în dreapta */
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.booking-card h3 {
+.booking-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 40px rgba(212, 175, 55, 0.25);
+  /* Glow mai puternic la hover */
+}
+
+/* Container pentru Imagine + Text (Partea Stângă) */
+.booking-left-content {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.booking-thumbnail {
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid #333;
+}
+
+/* Info Text */
+.booking-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #e2e8f0;
+}
+
+.booking-route {
+  font-size: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
+
+.booking-meta {
+  font-size: 13px;
+  color: #64748b;
+  font-family: monospace;
+}
+
+/* --- TAG-URILE TALE (Păstrate) --- */
 .booking-tag {
   display: inline-block;
-  margin-top: 8px;
+  margin-right: 8px;
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 0.75rem;
   letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .booking-tag.map {
@@ -35,32 +115,112 @@
 }
 
 .booking-tag.island {
-  background: #102a2a;
+  background: rgba(16, 42, 42, 0.5);
   color: #7fffd4;
+  border: 1px solid #7fffd4;
 }
 
 .booking-tag.jet {
-  background: #2a102a;
-  color: #d4af37;
-}
-.booking-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background: rgba(42, 16, 42, 0.5);
+  color: #fce7f3;
+  border: 1px solid #fbcfe8;
 }
 
-.remove-booking {
-  background: transparent;
-  border: 1px solid #a33;
-  color: #ff6b6b;
-  font-size: 1.1rem;
-  padding: 6px 10px;
+/* --- STATUS BADGES --- */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: rgba(234, 179, 8, 0.1);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.status-paid {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* --- SECȚIUNEA DE PLATĂ (Dreapta) --- */
+.payment-section {
+  text-align: right;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.price-tag {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Butonul de Plată (Stil Gold Gradient) */
+.pay-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #b4932a 100%);
+  color: #000;
+  border: none;
+  padding: 10px 24px;
   border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.pay-btn:hover {
+  filter: brightness(1.15);
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.pay-btn:disabled {
+  background: #333;
+  color: #777;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.paid-text {
+  color: #4ade80;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+/* Butonul tău vechi de ștergere (Opțional) */
+.remove-booking {
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.7;
 }
 
 .remove-booking:hover {
-  background: #ff6b6b;
-  color: #000;
+  background: #ef4444;
+  color: #fff;
+  opacity: 1;
 }

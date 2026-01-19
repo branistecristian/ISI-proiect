@@ -1,22 +1,27 @@
-import "@arcgis/core/assets/esri/themes/light/main.css";
-import esriConfig from "@arcgis/core/config";   // 🔴 ADĂUGAT
-import "leaflet/dist/leaflet.css";
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
-// 🔴 CRITICAL: unde caută ArcGIS asset-urile
-esriConfig.assetsPath = "/assets";              // 🔴 ADĂUGAT
+// 1. IMPORTĂM BROWSER ROUTER
+import { BrowserRouter } from 'react-router-dom';
 
-// 🔗 OpenAPI config
-import { OpenAPI } from './api/generated/core/OpenAPI'
+// 2. IMPORTĂM OpenAPI PENTRU A PĂSTRA LOGIN-UL
+import { OpenAPI } from "./api/generated/core/OpenAPI";
 
-OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
-OpenAPI.TOKEN = localStorage.getItem('token') ?? ''
+// --- FIX PENTRU LOGIN (Se execută imediat ce pornește site-ul) ---
+const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+if (token) {
+    OpenAPI.TOKEN = token;
+    console.log("Token restaurat automat la pornire!");
+}
+// -----------------------------------------------------------------
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    {/* 3. ÎMPACHETĂM TOATĂ APLICAȚIA ÎN BROWSER ROUTER */}
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>,
 )
